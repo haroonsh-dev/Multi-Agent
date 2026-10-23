@@ -1,0 +1,70 @@
+services:
+  mongo:
+    image: mongo:8
+    environment:
+      - GLIBC_TUNABLES=glibc.pthread.rseq=1
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    restart: unless-stopped
+
+  ai-backend:
+    build:
+      context: ./ai-backend
+      dockerfile: Dockerfile
+    ports:
+      - "28001:8000"
+    volumes:
+      - ./ai-backend/uploads:/app/uploads
+      - ./ai-backend/processed:/app/processed
+      - docs_shared_storage:/shared-storage
+    env_file:
+      - ./ai-backend/.env
+    environment:
+      - USE_GPU=false
+      - SHARED_STORAGE_PATH=/shared-storage
+    restart: unless-stopped
+
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    ports:
+      - "5100:5100"
+    volumes:
+      - docs_shared_storage:/shared-storage
+    environment:
+      - PORT=5100
+      - MONGO_URI=mongodb://mongo:27017/visibility_docs_ai
+      - FRONTEND_URL=http://192.168.1.23:13001
+      - AI_SERVICE_URL=http://ai-backend:8000
+      - AI_SERVICE_ENABLED=true
+      - SHARED_STORAGE_PATH=/shared-storage
+    depends_on:
+      mongo:
+        condition: service_healthy
+      ai-backend:
+        condition: service_started
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "13001:3124"
+    environment:
+      - PORT=3124
+      - NEXT_PUBLIC_API_URL=http://192.168.1.23:5100/api
+    depends_on:
+      - api-gateway
+    restart: unless-stopped
+
+volumes:
+  mongo_data:
+  docs_shared_storage:

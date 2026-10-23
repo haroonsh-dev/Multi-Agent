@@ -1,0 +1,141 @@
+name: Deploy to on-prem (LAN)
+
+# The target server (192.168.1.23) sits on a private LAN, so GitHub cannot reach
+# it with a webhook. A self-hosted runner on that box long-polls GitHub over an
+# outbound connection — no inbound ports, no VPN. Every push to main is built and
+# brought up with docker compose in-place.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+# A deploy mutates shared state (containers, volumes) — never run two at once.
+# Newer pushes queue rather than cancel, so the last commit wins.
+concurrency:
+  group: visibility-docs-onprem-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, linux, visibility-docs]
+    # Generous: the box is shared with heavy ML stacks and has a thin uplink, so
+    # the first build (PyTorch + baking the 1024-dim model) can take hours.
+    # Cached rebuilds afterwards are minutes.
+    timeout-minutes: 300
+
+    env:
+      APP_DIR: /home/voisibilitybots/apps/visibility-docs
+      REPO_SLUG: ${{ github.repository }}
+      SHA: ${{ github.sha }}
+      COMPOSE: "docker compose -f docker-compose.onprem.yml"
+      DOCKER_BUILDKIT: "1"
+      # The runner service does not inherit an interactive shell's PATH.
+      PATH: /usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin
+
+    steps:
+      - name: Sync source into the app directory (preserving server-side .env)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          plain="https://github.com/${REPO_SLUG}.git"
+          auth="https://x-access-token:${GH_TOKEN}@github.com/${REPO_SLUG}.git"
+          mkdir -p "$APP_DIR"
+          cd "$APP_DIR"
+
+          # The app dir already holds .env files, so `git clone` (needs an empty
+          # target) can't be used — set the repo up in place on first run.
+          if ! git rev-parse --git-dir >/dev/null 2>&1; then
+            echo "First deploy — initialising repo in $APP_DIR"
+            git init -q
+            git remote add origin "$auth"
+          fi
+
+          git remote set-url origin "$auth"
+          for a in 1 2 3 4 5; do
+            git fetch --depth=1 --no-tags origin "$SHA" && break
+            echo "fetch attempt $a failed, retrying in 15s"; sleep 15
+          done
+          git checkout -f -B main "$SHA"
+          # Drop anything not tracked EXCEPT the server-only secrets and data dirs.
+          git clean -ffd -e .env -e uploads -e processed
+          git remote set-url origin "$plain"
+          echo "Deploying commit $(git rev-parse --short HEAD)"
+
+      - name: Check server-side .env files
+        run: |
+          set -euo pipefail
+          missing=0
+          for f in .env api-gateway/.env ai-backend/.env; do
+            if [ ! -f "$APP_DIR/$f" ]; then
+              echo "::error::$APP_DIR/$f is missing — create it once before the first deploy (see docs/DEPLOY_ONPREM.md)."
+              missing=1
+            fi
+          done
+          [ "$missing" -eq 0 ]
+
+      - name: Pre-pull base images (box DNS/uplink is flaky)
+        run: |
+          set -uo pipefail
+          for img in python:3.12-slim-bookworm node:20-alpine mongo:8; do
+            for a in $(seq 1 20); do
+              docker pull "$img" && break
+              echo "::warning::pull $img attempt $a failed; retrying in 20s"; sleep 20
+            done
+          done
+
+      - name: Build images (sequential — the box is RAM-constrained)
+        working-directory: ${{ env.APP_DIR }}
+        run: |
+          set -euo pipefail
+          for svc in ai-backend api-gateway frontend; do
+            ok=0
+            for a in $(seq 1 12); do
+              if $COMPOSE build "$svc"; then ok=1; break; fi
+              echo "::warning::build of $svc attempt $a failed; retrying in 45s (cache mounts keep partial downloads)"
+              sleep 45
+            done
+            if [ "$ok" -ne 1 ]; then
+              echo "::error::build of $svc did not complete after 12 attempts"
+              exit 1
+            fi
+          done
+
+      - name: Start / update the stack
+        working-directory: ${{ env.APP_DIR }}
+        run: $COMPOSE up -d --remove-orphans
+
+      - name: Wait for services to become healthy
+        working-directory: ${{ env.APP_DIR }}
+        run: |
+          set -euo pipefail
+          check() {
+            local name="$1" url="$2" tries="$3"
+            echo "Waiting for $name ($url) ..."
+            for i in $(seq 1 "$tries"); do
+              code=$(curl -s -o /dev/null -w '%{http_code}' "$url" || true)
+              if [ "$code" = "200" ]; then echo "$name healthy after $((i*5))s"; return 0; fi
+              sleep 5
+            done
+            echo "::error::$name did not become healthy in time"
+            return 1
+          }
+          # ai-backend loads the reranker + 1024-dim embedding model at startup.
+          # Observed 2026-09-22: cold load took ~4m40s (the local model cache
+          # was missing weight files, so it fell back to downloading from
+          # HuggingFace Hub) and the old 60-try/300s budget cut it off 3s before
+          # the app finished starting. 100 tries gives real headroom instead of
+          # racing it every deploy; if the local model cache issue below gets
+          # fixed, this stays as slack, not a problem.
+          check "ai-backend" "http://127.0.0.1:8124/health" 100
+          check "api-gateway" "http://127.0.0.1:5100/api/health" 24
+          check "frontend"   "http://127.0.0.1:3124"           24
+
+      - name: Dump state on failure
+        if: failure()
+        working-directory: ${{ env.APP_DIR }}
+        run: |
+          $COMPOSE ps || true
+          $COMPOSE logs --tail 150 || true
+          free -h || true

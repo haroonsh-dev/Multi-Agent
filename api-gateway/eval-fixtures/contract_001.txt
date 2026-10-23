@@ -1,0 +1,40 @@
+VENDOR SERVICES AGREEMENT
+
+This Contract ("Agreement") is entered into on 2026-03-01 by and between:
+
+Party A: Visibility Bots (Pvt) Ltd, having its registered office at Lahore, Pakistan ("Client")
+Party B: NorthStar Logistics LLC, having its registered office at Dubai, UAE ("Vendor")
+
+1. SCOPE OF SERVICES
+Vendor shall provide freight forwarding and customs clearance services for Client's
+outbound shipments as detailed in Schedule A.
+
+2. TERM
+This Agreement shall commence on the Effective Date and continue for a period of
+twelve (12) months, unless earlier terminated under Section 6. The Agreement shall
+automatically renew for successive one-year terms unless either party provides
+written notice of non-renewal at least sixty (60) days prior to expiry.
+
+Effective Date: 2026-03-01
+Expiry Date: 2027-02-28
+
+3. PAYMENT TERMS
+Client shall pay Vendor within thirty (30) days of receipt of a valid invoice,
+in accordance with the rates set out in Schedule B.
+
+4. CONFIDENTIALITY
+Both parties agree to keep confidential all proprietary information disclosed
+during the term of this Agreement.
+
+5. GOVERNING LAW
+This Agreement shall be governed by the laws of the United Arab Emirates.
+
+6. TERMINATION
+Either party may terminate this Agreement for cause upon thirty (30) days written
+notice if the other party materially breaches any term herein.
+
+IN WITNESS WHEREOF, the parties have executed this Agreement as of the date first
+written above.
+
+_______________________            _______________________
+Visibility Bots (Pvt) Ltd           NorthStar Logistics LLC

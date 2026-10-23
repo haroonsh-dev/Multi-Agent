@@ -1,0 +1,38 @@
+{
+  "name": "docugemma-ai-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "env -u MallocStackLogging -u MallocStackLoggingNoCompact -u MallocStackLoggingLite -u MallocNanoZone next dev -p 3124",
+    "build": "next build",
+    "start": "next start -p ${PORT:-3124}",
+    "lint": "eslint",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "framer-motion": "^12.34.4",
+    "jszip": "^3.10.1",
+    "lucide-react": "^0.575.0",
+    "mammoth": "^1.12.0",
+    "next": "16.1.6",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-markdown": "^10.1.0",
+    "recharts": "^3.9.2",
+    "remark-gfm": "^4.0.1",
+    "tailwind-merge": "^3.5.0",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.1.6",
+    "tailwindcss": "^4",
+    "typescript": "^5",
+    "vitest": "^3.2.4"
+  }
+}

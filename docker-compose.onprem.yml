@@ -1,0 +1,112 @@
+name: visibility-docs
+
+services:
+  mongo:
+    image: mongo:8
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:-docsadmin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:?set MONGO_ROOT_PASSWORD in ./.env}
+      GLIBC_TUNABLES: glibc.pthread.rseq=1
+    volumes:
+      - docs_mongo_data:/data/db
+    # No host port — only the api-gateway container reaches it over the compose network.
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+  ai-backend:
+    build:
+      context: ./ai-backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - ./ai-backend/.env
+    environment:
+      USE_GPU: "false"
+      ENVIRONMENT: production
+      SHARED_STORAGE_PATH: /shared-storage
+    ports:
+      # Localhost-only: internal service, never exposed on the LAN.
+      - "127.0.0.1:8124:8000"
+    volumes:
+      - docs_ai_uploads:/app/uploads
+      - docs_ai_processed:/app/processed
+      - docs_shared_storage:/shared-storage
+    mem_limit: 3g
+    mem_reservation: 1g
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0) if urllib.request.urlopen('http://localhost:8000/health', timeout=5).status==200 else sys.exit(1)"]
+      interval: 20s
+      timeout: 10s
+      retries: 15
+      start_period: 180s
+
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - ./api-gateway/.env
+    environment:
+      NODE_ENV: production
+      PORT: "5100"
+      MONGO_URI: mongodb://${MONGO_ROOT_USER:-docsadmin}:${MONGO_ROOT_PASSWORD}@mongo:27017/${MONGO_DB:-visibility_docs_ai}?authSource=admin
+      AI_SERVICE_URL: http://ai-backend:8000
+      AI_SERVICE_ENABLED: "true"
+      SHARED_STORAGE_PATH: /shared-storage
+      FRONTEND_URL: ${FRONTEND_URL:?set FRONTEND_URL in ./.env}
+      LOG_DIR: /var/log/visibility-docs
+    volumes:
+      - docs_shared_storage:/shared-storage
+      - docs_api_logs:/var/log/visibility-docs
+    ports:
+      - "5100:5100"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      ai-backend:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:5100/api/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 40s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: /api
+        DOCS_API_PROXY_TARGET: http://api-gateway:5100
+    restart: unless-stopped
+    environment:
+      PORT: "3124"
+      NODE_ENV: production
+      # Next.js rewrites /api/* to this at runtime (see frontend/next.config.ts).
+      DOCS_API_PROXY_TARGET: http://api-gateway:5100
+      DOCS_API_PROXY_TIMEOUT_MS: "300000"
+    ports:
+      - "3124:3124"
+    depends_on:
+      api-gateway:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:3124"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 40s
+
+volumes:
+  docs_mongo_data:
+  docs_ai_uploads:
+  docs_ai_processed:
+  docs_shared_storage:
+  docs_api_logs:

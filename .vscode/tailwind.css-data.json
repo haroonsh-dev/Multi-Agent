@@ -1,0 +1,41 @@
+{
+  "version": 1.1,
+  "atDirectives": [
+    {
+      "name": "@theme",
+      "description": "Tailwind CSS v4 theme configuration. Define design tokens as CSS custom properties."
+    },
+    {
+      "name": "@source",
+      "description": "Tailwind CSS v4 source detection. Tell Tailwind which files to scan for class names."
+    },
+    {
+      "name": "@custom-variant",
+      "description": "Tailwind CSS v4 custom variant definition (e.g. dark mode)."
+    },
+    {
+      "name": "@utility",
+      "description": "Tailwind CSS v4 custom utility definition."
+    },
+    {
+      "name": "@plugin",
+      "description": "Tailwind CSS v4 plugin registration."
+    },
+    {
+      "name": "@apply",
+      "description": "Inline utility classes into a custom CSS rule."
+    },
+    {
+      "name": "@layer",
+      "description": "Cascade layer for Tailwind base, components, or utilities."
+    },
+    {
+      "name": "@config",
+      "description": "Load a legacy Tailwind config file."
+    },
+    {
+      "name": "@variant",
+      "description": "Legacy Tailwind variant directive (prefer @custom-variant in v4)."
+    }
+  ]
+}

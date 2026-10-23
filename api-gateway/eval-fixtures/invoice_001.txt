@@ -1,0 +1,24 @@
+TAX INVOICE
+
+Digilog Electronics (Pvt) Ltd
+123 Industrial Area, Karachi, Pakistan
+
+Invoice #: INV-2026-00417
+Invoice Date: 2026-08-14
+Bill To: Northbridge Manufacturing Co.
+
+Description                         Qty      Unit Price      Amount
+--------------------------------------------------------------------
+Industrial PLC Controller Unit       4        45,000.00       180,000.00
+Wiring Harness Kit                  10         2,500.00        25,000.00
+Installation & Commissioning         1        30,000.00        30,000.00
+
+Subtotal:                                                     235,000.00
+Sales Tax (17%):                                               39,950.00
+Grand Total:                                                  274,950.00
+
+Amount Due: PKR 274,950.00
+Payment Terms: Net 30 days
+Bank: Habib Bank Limited, A/C 01-234-567890
+
+Thank you for your business.

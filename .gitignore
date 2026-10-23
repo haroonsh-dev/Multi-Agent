@@ -1,0 +1,42 @@
+__pycache__/
+*.py[cod]
+*.db
+node_modules/
+.next/
+.env
+.env.*
+!.env.example.safe
+venv/
+.venv/
+*.egg-info/
+dist/
+build/
+.DS_Store
+.env.local
+.env.example
+**/.env.example
+ai-backend/.env
+ai-backend/.env.example
+uploads/
+shared-storage/
+ai-backend/data/
+*.safetensors
+*.bin
+*.pt
+*.onnx
+*.pdiparams
+*.pdmodel
+.cache_home/
+**/.cache_home/
+
+# Friend's reference project used for cherry-picking improvements (not part of this repo's app)
+Visibility_Docs_AI_VM-main update model/
+
+# Temporary diff files used during merges
+_diff_app_*.txt
+
+# Junk / accidental artifacts — do not commit
+*.zip
+*.tsbuildinfo
+ai-backend/test_results.txt
+.pytest_cache/

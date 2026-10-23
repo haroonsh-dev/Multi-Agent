@@ -1,0 +1,14 @@
+{
+  "name": "docugemma-ai",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -k -n gateway,frontend -c blue,green \"npm run dev --prefix api-gateway\" \"npm run dev --prefix frontend\"",
+    "dev:gateway": "npm run dev --prefix api-gateway",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "start:gateway": "npm run build --prefix api-gateway && npm start --prefix api-gateway",
+    "start:lean": "concurrently -k -n gateway,frontend -c blue,green \"npm run start:gateway\" \"npm run start --prefix frontend\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

@@ -1,0 +1,32 @@
+name: AI backend tests
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  policy-gate:
+    name: Tool-policy gate regression tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ai-backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      # The policy-gate unit tests import only agent_registry (stdlib) — no
+      # Supabase, no Pinecone/LangChain — so a bare pytest install is enough.
+      - run: pip install pytest
+      - name: Unit tests — fail-closed logic (no app boot)
+        run: python -m pytest tests/test_policy_gate.py -q
+      # The HTTP-level tests boot the FastAPI app, which needs the full backend
+      # deps. They verify the auth gating (401) + mutation gate (403) + unknown
+      # tool fail-closed over the real router, not just the function.
+      - name: HTTP smoke tests — auth gating + mutation gate
+        run: |
+          pip install -r requirements.txt
+          python -m pytest tests/test_policy_gate_app.py -q

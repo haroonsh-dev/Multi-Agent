@@ -1,0 +1,33 @@
+name: API Gateway tests
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    name: Typecheck and unit scripts
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: api-gateway
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: api-gateway/package-lock.json
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npm run test:analytics-intent
+      - run: npm run test:document-name-match
+      - run: npm run test:finance-golden
+      # Binds frontend/src/lib/documentAgents.ts to the ai-backend agent registry;
+      # fails if a registry agent / doc_type is missing or mis-mapped in the UI copy.
+      - run: npm run test:catalog-drift
+      # Pins the outbound policy-decision mapping: an integration send must stop
+      # on approval_required OR blocked (never fail open on unknown tools).
+      - run: npm run test:policy-blocks-send

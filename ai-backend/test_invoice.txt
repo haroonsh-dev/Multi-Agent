@@ -1,0 +1,23 @@
+
+        INVOICE 1784877165.3846898
+        Invoice Number: INV-2024-9090
+        Date: 2024-05-12
+        Due Date: 2024-06-12
+        
+        Vendor: Acme Corporation
+        Vendor Address: 123 Tech Lane, Silicon Valley, CA
+        Vendor Tax ID: 99-1234567
+        
+        Customer: Visibility Docs AI
+        Customer Address: 456 Innovation Blvd, NY
+        
+        Line Items:
+        1. Enterprise Server License - Qty 2 - Unit Price 1500.00 - Total 3000.00
+        2. Priority Support - Qty 1 - Unit Price 500.00 - Total 500.00
+        
+        Subtotal: 3500.00
+        Tax (10%): 350.00
+        Discount: 0.00
+        Total Due: 3850.00 USD
+        Payment Terms: Net 30
+        

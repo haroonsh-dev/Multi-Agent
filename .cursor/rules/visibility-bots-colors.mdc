@@ -1,0 +1,29 @@
+---
+description: Visibility Bots shared product color scheme — use --vb-* tokens across Docs UI
+globs: frontend/**/*.{tsx,ts,css}
+alwaysApply: false
+---
+
+# Visibility Bots color scheme
+
+Source of truth: `frontend/src/app/globals.css` (`--vb-*` tokens).
+
+## Rules
+
+1. Prefer semantic tokens (`--vb-*`, or product aliases like `--accent`, `--canvas`) over raw hex / Tailwind sky/teal in components.
+2. Primary buttons: SOLID `--vb-blue` / `--vb-color-primary-btn-bg`. Do NOT use blue gradients on buttons. Use `.btn-primary`, `.btn-gradient` (solid), or `<Button variant="primary">`.
+3. Accent gradients are allowed only on decorative text / atmospheric washes — never on primary CTAs.
+4. Dark chrome (nav/sidebar): `--vb-dark` stack + inverse text (`--vb-blue-bright` for active accents).
+5. Light app chrome: `--vb-paper` / `--vb-mist` + `--vb-ink` text.
+6. Brand blue is the only accent family. Do not reintroduce teal as brand accents.
+7. Fonts: sans = IBM Plex Sans (`--font-ibm-plex`), display = Space Grotesk (`font-display`), mono = JetBrains Mono.
+
+## Key tokens
+
+- Primary: `--vb-blue` (#38b6ff)
+- Primary button text: `--vb-color-primary-btn-fg` (#03111d)
+- Accent on light: `--vb-blue-dark` (#0a6ba8)
+- Accent on dark: `--vb-blue-bright` (#7ee0ff)
+- Paper / mist / ink: `--vb-paper`, `--vb-mist`, `--vb-ink`
+
+RGB for rgba(): 56, 182, 255.

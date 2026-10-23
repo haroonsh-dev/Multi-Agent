@@ -1,0 +1,30 @@
+[
+  {
+    "file": "invoice_001.txt",
+    "expectedDocumentType": "invoice",
+    "expectedAgent": "finance_agent",
+    "expectedFields": {
+      "invoice_number": "INV-2026-00417",
+      "total_amount": "274,950",
+      "vendor_name": "Digilog"
+    }
+  },
+  {
+    "file": "contract_001.txt",
+    "expectedDocumentType": "contract",
+    "expectedAgent": "legal_agent",
+    "expectedFields": {
+      "effective_date": "2026-03-01",
+      "parties": "NorthStar Logistics"
+    }
+  },
+  {
+    "file": "certificate_001.txt",
+    "expectedDocumentType": "certificate",
+    "expectedAgent": "compliance_agent",
+    "expectedFields": {
+      "issuer": "Bureau Veritas",
+      "expiry_date": "2028-05-09"
+    }
+  }
+]

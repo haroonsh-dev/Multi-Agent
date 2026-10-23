@@ -1,0 +1,82 @@
+services:
+  # ============================================================================
+  # 1. DocuGemma AI Backend (Python FastAPI + Google Gemma 2B Orchestrator)
+  # ============================================================================
+  - type: web
+    name: docugemma-ai-backend
+    runtime: docker
+    dockerfilePath: ./ai-backend/Dockerfile
+    dockerContext: ./ai-backend
+    plan: starter
+    region: oregon
+    healthCheckPath: /health
+    envVars:
+      - fromGroup: docugemma-shared-auth
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: PINECONE_API_KEY
+        sync: false
+      - key: PINECONE_INDEX_NAME
+        value: visibility-docs
+
+  # ============================================================================
+  # 2. DocuGemma API Gateway (Node.js Express + MongoDB Atlas + JWT Auth)
+  # ============================================================================
+  - type: web
+    name: docugemma-api-gateway
+    runtime: node
+    rootDir: api-gateway
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    plan: free
+    region: oregon
+    healthCheckPath: /api/health
+    envVars:
+      - fromGroup: docugemma-shared-auth
+      - key: NODE_ENV
+        value: production
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: JWT_EXPIRE
+        value: 30d
+      - key: JWT_REFRESH_EXPIRE
+        value: 7d
+      - key: AI_SERVICE_URL
+        fromService:
+          type: web
+          name: docugemma-ai-backend
+          property: host
+      - key: AI_SERVICE_TIMEOUT_MS
+        value: 300000
+
+  # ============================================================================
+  # 3. DocuGemma Frontend (Next.js 16 Web Application)
+  # ============================================================================
+  - type: web
+    name: docugemma-frontend
+    runtime: node
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    plan: free
+    region: oregon
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DOCS_API_PROXY_TARGET
+        fromService:
+          type: web
+          name: docugemma-api-gateway
+          property: host
+
+envVarGroups:
+  - name: docugemma-shared-auth
+    envVars:
+      - key: INTERNAL_SERVICE_KEY
+        generateValue: true

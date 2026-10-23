@@ -1,0 +1,16 @@
+node_modules
+.git
+.gitignore
+*.pyc
+__pycache__
+.env
+.env.*
+backend/docs_ai.db
+uploads/*
+processed/*
+models/
+*.md
+*.log
+.tox
+.coverage
+coverage/

@@ -1,0 +1,4 @@
+# Keep folder, ignore uploaded documents
+*
+!.gitignore
+!.gitkeep

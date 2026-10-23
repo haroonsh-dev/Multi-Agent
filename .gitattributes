@@ -1,0 +1,10 @@
+*.sh text eol=lf
+
+# Deploy-critical files must stay LF — they run on the Linux server / in Docker
+# build (heredocs, YAML) and CRLF silently breaks them.
+Dockerfile text eol=lf
+*.Dockerfile text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+.dockerignore text eol=lf
+*.env.example text eol=lf
