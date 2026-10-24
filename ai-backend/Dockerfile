@@ -32,18 +32,16 @@ COPY requirements.txt .
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip install --retries 10 --timeout 120 -r requirements.txt
 
-# Bake the production models into the image so container start needs no network
-# and no multi-GB first-boot download over the thin uplink:
-#   - BAAI/bge-large-en-v1.5  (1024-dim embeddings — matches the Pinecone index)
-#   - cross-encoder/ms-marco-MiniLM-L-6-v2  (RAG reranker)
-# The embedding model is saved to the exact path embedding_service.py looks for
-# first (data/local_models/<safe_name>), so startup skips the download entirely.
+COPY . .
+
+# The service resolves local models relative to app/services/embedding_service.py,
+# so the model must live under /app/app/data/local_models. Download after COPY:
+# COPY includes the config files tracked in Git, while the weight files are
+# intentionally gitignored and must be baked into the image here.
 ARG EMBEDDING_MODEL=BAAI/bge-large-en-v1.5
 ENV EMBEDDING_MODEL=${EMBEDDING_MODEL}
 RUN --mount=type=cache,target=/root/.cache/huggingface \
-    python -c "import os; from sentence_transformers import SentenceTransformer, CrossEncoder; n=os.environ['EMBEDDING_MODEL']; d=os.path.join('/app','data','local_models', n.replace('/','_').replace('-','_')); os.makedirs(d, exist_ok=True); SentenceTransformer(n, device='cpu').save(d); CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2', device='cpu'); print('baked', d)"
-
-COPY . .
+    python -c "import os; from sentence_transformers import SentenceTransformer; n=os.environ['EMBEDDING_MODEL']; d=os.path.join('/app','app','data','local_models', n.replace('/','_').replace('-','_')); os.makedirs(d, exist_ok=True); SentenceTransformer(n, device='cpu').save(d); print('baked', d)"
 
 RUN mkdir -p /app/uploads /app/processed /shared-storage
 
